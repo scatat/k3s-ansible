@@ -3,21 +3,25 @@ k3s_cluster:
   children:
     server:
       hosts:
-        phoney:
+        phoney.home.stanandliz.net:
+    #agent:
+    #  hosts:
+    #    fone.home.stanandliz.net:
 
   # Required Vars
   vars:
     ansible_port: 22
     ansible_user: ansible
-    k3s_version: v1.30.1+k3s1
+    k3s_version: v1.31.2+k3s1
     # The token should be a random string of reasonable length. You can generate
     # one with the following commands:
     # - openssl rand -base64 64
     # - pwgen -s 64 1
     # You can use ansible-vault to encrypt this value / keep it secret.
-    token: 'pBZo:6njnHk@\1^TI5^d17U'
+    token: "{{ lookup('community.general.onepassword', 'boneville_k3s_join_token', vault='machine', field='token' ) }}"
+    k3s_state_db_password: "{{ lookup('community.general.onepassword', 'k3s_mysql', vault='machine', field='password' ) }}"
     api_endpoint: "{{ hostvars[groups['server'][0]]['ansible_host'] | default(groups['server'][0]) }}"
-    extra_server_args: "--disable local-storage --flannel-backend=none --disable-network-policy"
+    extra_server_args: "--disable local-storage --flannel-backend=vxlan"
     extra_agent_args: ""
 
     # Optional vars
@@ -32,7 +36,6 @@ k3s_cluster:
     # Manifests or Airgap should be either full paths or relative to the playbook directory.
     # List of locally available manifests to apply to the cluster, useful for PVCs or Traefik modifications.
     # extra_manifests: [ '/path/to/manifest1.yaml', '/path/to/manifest2.yaml' ]
-     extra_manifests: [ '/path/to/manifest1.yaml', '/path/to/manifest2.yaml' ]
     # airgap_dir: /tmp/k3s-airgap-images
 
     server_config_yaml:  |
@@ -40,7 +43,7 @@ k3s_cluster:
       tls-san:
         - "boneville.local"
       cluster-init: true
-      datastore-endpoint: "mysql://k3s_db_user:sK7f5foasYv8ldC6lNdalBY8@tcp(10.0.122.2:3306)/k3s"
+      datastore-endpoint: "mysql://k3s_db_user:{{ k3s_state_db_password }}@tcp(10.0.122.2:3306)/k3s"
 
     #   This is now an inner yaml file. Maintain the indentation.
     #   YAML here will be placed as the content of /etc/rancher/k3s/config.yaml
