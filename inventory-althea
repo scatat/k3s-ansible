@@ -4,6 +4,7 @@ k3s_cluster:
     server:
       hosts:
         kingdok.home.stanandliz.net:
+        phoney.home.stanandliz.net:
     #agent:
     #  hosts:
     #    fone.home.stanandliz.net:
@@ -20,7 +21,7 @@ k3s_cluster:
     # You can use ansible-vault to encrypt this value / keep it secret.
     token: "{{ lookup('community.general.onepassword', 'althea_k3s_join_token', vault='machine', field='token' ) }}"
     api_endpoint: "{{ hostvars[groups['server'][0]]['ansible_host'] | default(groups['server'][0]) }}"
-    extra_server_args: "--disable local-storage --flannel-backend=vxlan"
+    extra_server_args: "--disable local-storage --flannel-backend=vxlan --disable traefik --disable=servicelb"
     extra_agent_args: ""
 
     # Optional vars
@@ -41,6 +42,10 @@ k3s_cluster:
       write-kubeconfig-mode: "0644"
       tls-san:
         - "althea.local"
+        - "kingdok.home.stanandliz.net"
+        - "phoney.home.stanandliz.net"
+        - "10.0.122.6"  # kingdok IP
+        - "10.0.122.7"  # phoney IP      -
       cluster-init: true
 
     #   This is now an inner yaml file. Maintain the indentation.
